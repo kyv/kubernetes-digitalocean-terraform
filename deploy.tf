@@ -205,6 +205,16 @@ EOF
    }
 }
 
+resource "null_resource" "deploy_heapster" {
+    depends_on = ["digitalocean_droplet.k8s_worker"]
+    provisioner "local-exec" {
+        command = <<EOF
+            export KUBECONFIG=${path.module}/secrets/admin.conf
+            until kubectl get pods 2>/dev/null; do printf '.'; sleep 5; done
+            kubectl create -f ${path.module}/07-heapster.yaml
+EOF
+   }
+}
 resource "null_resource" "deploy_digitalocean_cloud_controller_manager" {
     depends_on = ["digitalocean_droplet.k8s_worker"]
     provisioner "local-exec" {
