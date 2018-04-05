@@ -227,3 +227,33 @@ resource "null_resource" "deploy_digitalocean_cloud_controller_manager" {
 EOF
     }
 }
+
+###############################################################################
+#
+# SSH Proxy host
+#
+###############################################################################
+
+resource "digitalocean_droplet" "ssh_proxy" {
+    image = "coreos-stable"
+    name = "${var.prefix}ssh-proxy"
+    region = "${var.do_region}"
+    private_networking = true
+    size = "s-1vcpu-1gb"
+    ssh_keys = ["${split(",", var.ssh_fingerprint)}"]
+
+    # Add sshguard
+    provisioner "remote-exec" {
+        inline = [
+          "git clone https://github.com/pablocouto/coreos-sshguard.git",
+          "sudo install -o root -m 644 coreos-sshguard/sshguard.service /etc/systemd/system/",
+          "sudo systemctl enable sshguard",
+          "sudo systemctl start sshguard",
+        ]
+        connection {
+            type = "ssh",
+            user = "core",
+            private_key = "${file(var.ssh_private_key)}"
+        }
+    }
+}
