@@ -257,3 +257,17 @@ resource "digitalocean_droplet" "ssh_proxy" {
         }
     }
 }
+
+#outputs
+output "worker_addresses" {
+  value = ["${digitalocean_droplet.k8s_worker.*.ipv4_address_private}"]
+}
+output "master_address" {
+  value = "${digitalocean_droplet.k8s_master.ipv4_address_private}"
+}
+output "ssh_address_public" {
+  value = "${digitalocean_droplet.ssh_proxy.ipv4_address}"
+}
+output "ingress_address_public" {
+  value = "${digitalocean_droplet.k8s_worker.0.ipv4_address}"
+}
