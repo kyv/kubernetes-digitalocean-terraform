@@ -181,16 +181,15 @@ resource "digitalocean_droplet" "k8s_worker" {
 
 # use kubeconfig retrieved from master
 
-resource "null_resource" "deploy_microbot" {
+resource "null_resource" "deploy_nginx_ingress" {
     depends_on = ["digitalocean_droplet.k8s_worker"]
     provisioner "local-exec" {
         command = <<EOF
             export KUBECONFIG=${path.module}/secrets/admin.conf
-            sed -e "s/\$EXT_IP1/${digitalocean_droplet.k8s_worker.0.ipv4_address}/" < ${path.module}/02-microbot.yaml > ./secrets/02-microbot.rendered.yaml
             until kubectl get pods 2>/dev/null; do printf '.'; sleep 5; done
-            kubectl create -f ./secrets/02-microbot.rendered.yaml
+            kubectl create -f ${path.module}/04-ingress-controller.yaml
 EOF
-    }
+   }
 }
 
 resource "null_resource" "deploy_digitalocean_cloud_controller_manager" {
