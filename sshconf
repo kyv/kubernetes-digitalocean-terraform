@@ -1,0 +1,31 @@
+cat  << EOF
+Host k8sProxy
+ HostName ${PROXY_HOST}
+ User core
+ IdentityFile ${PRIVATE_KEY}
+
+Host k8sMaster
+ HostName ${MASTER_HOST}
+ User core
+ ProxyJump core@k8sProxy:22
+ IdentityFile ${PRIVATE_KEY}
+
+Host k8sWorker1
+ HostName ${WORKER_HOST_1}
+ User core
+ ProxyJump core@k8sProxy:22
+ IdentityFile ${PRIVATE_KEY}
+
+Host k8sWorker2
+ HostName ${WORKER_HOST_2}
+ User core
+ ProxyJump core@k8sProxy:22
+ IdentityFile ${PRIVATE_KEY}
+
+Host k8sWorker3
+ HostName ${WORKER_HOST_3}
+ User core
+ ProxyJump core@k8sProxy:22
+ IdentityFile ${PRIVATE_KEY}
+
+EOF

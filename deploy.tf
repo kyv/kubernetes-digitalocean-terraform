@@ -268,6 +268,23 @@ resource "digitalocean_droplet" "ssh_proxy" {
     }
 }
 
+# ssh config
+
+resource "null_resource" "build_ssh_config" {
+    depends_on = ["digitalocean_droplet.ssh_proxy"]
+    provisioner "local-exec" {
+        command = "./sshconf > secrets/ssh.conf"
+        environment {
+          PRIVATE_KEY = "${var.ssh_private_key}"
+          PROXY_HOST = "${digitalocean_droplet.ssh_proxy.ipv4_address}"
+          MASTER_HOST = "${digitalocean_droplet.k8s_master.ipv4_address_private}"
+          WORKER_HOST_1 = "${digitalocean_droplet.k8s_worker.0.ipv4_address_private}"
+          WORKER_HOST_2 = "${digitalocean_droplet.k8s_worker.1.ipv4_address_private}"
+          WORKER_HOST_3 = "${digitalocean_droplet.k8s_worker.2.ipv4_address_private}"
+        }
+    }
+}
+
 #outputs
 output "worker_addresses" {
   value = ["${digitalocean_droplet.k8s_worker.*.ipv4_address_private}"]
