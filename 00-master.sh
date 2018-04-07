@@ -3,7 +3,7 @@ set -o nounset -o errexit
 
 kubeadm init \
   --pod-network-cidr=10.244.0.0/16 \
-  --apiserver-advertise-address=${MASTER_PRIVATE_IP}\
+  --apiserver-advertise-address=${MASTER_PRIVATE_IP} \
   --apiserver-cert-extra-sans=${MASTER_PUBLIC_IP}
 
 kubectl --kubeconfig=/etc/kubernetes/admin.conf apply -f /tmp/kube-flannel.yml
