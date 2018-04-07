@@ -67,6 +67,16 @@ resource "digitalocean_droplet" "k8s_master" {
     ssh_keys = ["${split(",", var.ssh_fingerprint)}"]
 
     provisioner "file" {
+        source = "./kube-flannel.yml"
+        destination = "/tmp/kube-flannel.yml"
+        connection {
+            type = "ssh",
+            user = "core",
+            private_key = "${file(var.ssh_private_key)}"
+        }
+    }
+
+    provisioner "file" {
         source = "./00-master.sh"
         destination = "/tmp/00-master.sh"
         connection {
