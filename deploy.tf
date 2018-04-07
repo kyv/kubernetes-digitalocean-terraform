@@ -299,3 +299,143 @@ output "ssh_address_public" {
 output "ingress_address_public" {
   value = "${digitalocean_droplet.k8s_worker.0.ipv4_address}"
 }
+
+###############################################################################
+#
+# master host inbound firewall rules
+#
+# TCP port 22 from ssh proxy for debugging
+# TCP ports 2379-2380 from worker nodes for etcd server client API
+# TCP port 6443 for accessing Kubernetes API server.
+# UDP port 8472 from Worker Nodes for flannel overlay network - vxlan backend
+###############################################################################
+
+resource "digitalocean_firewall" "k8s_master" {
+  name = "${var.prefix}k8s-master-fw"
+  depends_on = ["digitalocean_droplet.ssh_proxy"]
+  droplet_ids = ["${digitalocean_droplet.k8s_master.id}"]
+
+  inbound_rule = [
+    {
+      protocol           = "tcp"
+      port_range         = "22"
+      source_addresses   = ["${digitalocean_droplet.ssh_proxy.ipv4_address_private}"]
+    },
+    {
+      protocol           = "tcp"
+      port_range         = "6443"
+      source_addresses = ["0.0.0.0/0"]
+    },
+    {
+     protocol           = "tcp"
+     port_range         = "2379-2380"
+     source_addresses   = ["${digitalocean_droplet.k8s_worker.*.ipv4_address_private}"]
+    },
+    {
+      protocol           = "tcp"
+      port_range         = "10255"
+      source_addresses   = ["${digitalocean_droplet.k8s_worker.*.ipv4_address_private}"]
+    },
+    {
+      protocol           = "udp"
+      port_range         = "8472"
+      source_addresses   = ["${digitalocean_droplet.k8s_worker.*.ipv4_address_private}"]
+    },
+  ]
+
+  outbound_rule = [
+    {
+      protocol                = "tcp"
+      port_range              = "all"
+      destination_addresses   = ["0.0.0.0/0", "::/0"]
+    },
+    {
+      protocol                = "udp"
+      port_range              = "all"
+      destination_addresses   = ["0.0.0.0/0", "::/0"]
+    },
+  ]
+
+}
+
+###############################################################################
+#
+# worker host inbound firewall rules
+#
+# TCP port 22 from master node for debugging over ssh
+# TCP port 10250 from Master nodes for Kubelet API exec and logs.
+# TCP port 10255 from worker nodes for heapster / read-only Kubelet API.
+# TCP port ALL from Master & Worker Nodes for Intra-cluster communication (unnecessary if vxlan is used for networking)
+# UDP port 8285 from Master & Worker Nodes for flannel overlay network - udp backend. This is the default network configuration
+# UDP port 8472 from Master & Worker Nodes 	flannel overlay network - vxlan backend (only required if using flannel)
+#
+###############################################################################
+
+resource "digitalocean_firewall" "k8s_worker" {
+  name = "${var.prefix}k8s-worker-fw"
+
+  droplet_ids = ["${digitalocean_droplet.k8s_worker.*.id}"]
+
+  inbound_rule = [
+    {
+      protocol           = "tcp"
+      port_range         = "22"
+      source_addresses   = ["${digitalocean_droplet.ssh_proxy.ipv4_address_private}"]
+    },
+    { # FIXME remove workers
+      protocol           = "tcp"
+      port_range         = "10250"
+      source_addresses = ["${digitalocean_droplet.k8s_master.ipv4_address_private}"]
+    },
+    {
+      protocol           = "tcp"
+      port_range         = "10255"
+      source_addresses   = ["${digitalocean_droplet.k8s_worker.*.ipv4_address_private}"]
+    },
+    {
+      protocol           = "udp"
+      port_range         = "8472"
+      source_addresses   = ["${digitalocean_droplet.k8s_master.ipv4_address_private}", "${digitalocean_droplet.k8s_worker.*.ipv4_address_private}"]
+    },
+  ]
+
+  outbound_rule = [
+    {
+      protocol                = "tcp"
+      port_range              = "all"
+      destination_addresses   = ["0.0.0.0/0", "::/0"]
+    },
+    {
+      protocol                = "udp"
+      port_range              = "all"
+      destination_addresses   = ["0.0.0.0/0", "::/0"]
+    },
+  ]
+}
+
+###############################################################################
+#
+# worker host inbound firewall rules
+#
+# http[s] for ingress
+###############################################################################
+
+resource "digitalocean_firewall" "k8s_ingress" {
+  name = "${var.prefix}k8s-ingress-fw"
+
+  droplet_ids = ["${digitalocean_droplet.k8s_worker.0.id}"]
+
+  inbound_rule = [
+    {
+      protocol           = "tcp"
+      port_range         = "80"
+      source_addresses = ["0.0.0.0/0"]
+    },
+    {
+      protocol           = "tcp"
+      port_range         = "443"
+      source_addresses = ["0.0.0.0/0"]
+    },
+  ]
+
+}
