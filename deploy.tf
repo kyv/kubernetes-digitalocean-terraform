@@ -249,7 +249,7 @@ resource "digitalocean_droplet" "ssh_proxy" {
     name = "${var.prefix}ssh-proxy"
     region = "${var.do_region}"
     private_networking = true
-    size = "s-1vcpu-1gb"
+    size = "512mb"
     ssh_keys = ["${split(",", var.ssh_fingerprint)}"]
 
     # Add sshguard
