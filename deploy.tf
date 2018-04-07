@@ -226,7 +226,7 @@ EOF
    }
 }
 resource "null_resource" "deploy_digitalocean_cloud_controller_manager" {
-    depends_on = ["digitalocean_droplet.k8s_worker"]
+    depends_on = ["null_resource.deploy_nginx_ingress"]
     provisioner "local-exec" {
         command = <<EOF
             export KUBECONFIG=${path.module}/secrets/admin.conf
@@ -245,6 +245,7 @@ EOF
 ###############################################################################
 
 resource "digitalocean_droplet" "ssh_proxy" {
+    depends_on = ["null_resource.deploy_digitalocean_cloud_controller_manager"]
     image = "coreos-stable"
     name = "${var.prefix}ssh-proxy"
     region = "${var.do_region}"
