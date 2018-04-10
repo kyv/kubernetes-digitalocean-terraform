@@ -236,6 +236,19 @@ resource "null_resource" "deploy_hello" {
 EOF
    }
 }
+
+# resource "null_resource" "deploy_kube_lego" {
+#    depends_on = ["null_resource.deploy_hello"]
+#    provisioner "local-exec" {
+#        command = <<EOF
+#            export KUBECONFIG=${path.module}/secrets/admin.conf
+#            kubectl create -f ${path.module}/05-kube-lego.yaml
+#
+# EOF
+#    }
+# }
+
+
 resource "null_resource" "deploy_digitalocean_cloud_controller_manager" {
     depends_on = ["null_resource.deploy_nginx_ingress"]
     provisioner "local-exec" {
