@@ -225,6 +225,17 @@ resource "null_resource" "deploy_heapster" {
 EOF
    }
 }
+
+resource "null_resource" "deploy_hello" {
+   depends_on = ["null_resource.deploy_nginx_ingress"]
+   provisioner "local-exec" {
+       command = <<EOF
+            export KUBECONFIG=${path.module}/secrets/admin.conf
+           kubectl create -f ${path.module}/06-hello.yaml
+
+EOF
+   }
+}
 resource "null_resource" "deploy_digitalocean_cloud_controller_manager" {
     depends_on = ["null_resource.deploy_nginx_ingress"]
     provisioner "local-exec" {
