@@ -228,7 +228,7 @@ spec:
       # like with kubeadm
       hostNetwork: true
       nodeSelector:
-        kubernetes.io/role: ingress
+        node-role.kubernetes.io/ingress: 'true'
       # tolerations:
       # - key: "node-role.kubernetes.io/master"
       #   value: ""

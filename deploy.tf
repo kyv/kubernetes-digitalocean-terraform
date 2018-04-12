@@ -197,12 +197,11 @@ resource "null_resource" "label_ingress_node" {
        command = <<EOF
            export KUBECONFIG=${path.module}/secrets/admin.conf
            until kubectl get nodes 2>/dev/null; do printf '.'; sleep 5; done
-           kubectl label nodes ${var.prefix}k8s-worker-01 kubernetes.io/role=ingress
+           kubectl label nodes ${var.prefix}k8s-worker-01 node-role.kubernetes.io/ingress=true
 
 EOF
    }
 }
-
 
 resource "null_resource" "deploy_nginx_ingress" {
     depends_on = ["digitalocean_droplet.k8s_worker"]
